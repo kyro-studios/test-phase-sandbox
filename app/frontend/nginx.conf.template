@@ -1,0 +1,25 @@
+# nginx の公式イメージは、起動時に /etc/nginx/templates/*.template の ${変数} を環境変数で置き換えて、conf.d に書き出す。
+# ${PORT} (Cloud Run が渡す。既定 8080) と ${BACKEND_URL} (バックエンドの HTTPS の URL) を置き換える。
+server {
+    listen ${PORT};
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    server_tokens off;
+
+    # 画面は SPA。存在しないパスは index.html に戻す
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # /api/ は BACKEND_URL へ中継する。SNI と Host は BACKEND_URL のホストにそろえる。ID トークンは付けない
+    location /api/ {
+        proxy_pass ${BACKEND_URL};
+        proxy_ssl_server_name on;
+        proxy_set_header Host $proxy_host;
+        proxy_connect_timeout 5s;
+        proxy_send_timeout 5s;
+        proxy_read_timeout 5s;
+    }
+}
