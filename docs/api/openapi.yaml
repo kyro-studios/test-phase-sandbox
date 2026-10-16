@@ -22,8 +22,8 @@ paths:
         状態は変えず、データは読み書きしない。クエリ文字列と本文は、不正な値も含めて無視する。
         応答は要求を受けてから 1 秒以内に完了する。
 
-        `GET` と `HEAD` 以外のメソッド (`POST`、`PUT`、`PATCH`、`DELETE`、`OPTIONS` など) は、
-        状態コード 405、`Allow: GET, HEAD`、空の本文を返す (`405` の応答を参照)。
+        `GET` と `HEAD` 以外のメソッド (`POST`、`PUT`、`PATCH`、`DELETE`、`OPTIONS`、`TRACE`、`CONNECT` など) は、
+        状態コード 405、`Allow: GET, HEAD`、空の本文を返す (OpenAPI に書けるメソッドは、各メソッドの `405` の応答を参照)。
       security: []
       responses:
         '200':
@@ -35,8 +35,6 @@ paths:
               example:
                 status: ok
                 time: '2026-10-16T07:33:00Z'
-        '405':
-          $ref: '#/components/responses/MethodNotAllowed'
         '500':
           $ref: '#/components/responses/InternalError'
     head:
@@ -52,6 +50,60 @@ paths:
             application/json: {}
         '500':
           $ref: '#/components/responses/InternalError'
+    post:
+      tags: [health-check]
+      operationId: postHealthNotAllowed
+      summary: 許可されていないメソッド (POST)
+      description: '`GET` と `HEAD` だけを受け付ける。本文は付けず、状態は変えない。'
+      security: []
+      responses:
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
+    put:
+      tags: [health-check]
+      operationId: putHealthNotAllowed
+      summary: 許可されていないメソッド (PUT)
+      description: '`GET` と `HEAD` だけを受け付ける。本文は付けず、状態は変えない。'
+      security: []
+      responses:
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
+    patch:
+      tags: [health-check]
+      operationId: patchHealthNotAllowed
+      summary: 許可されていないメソッド (PATCH)
+      description: '`GET` と `HEAD` だけを受け付ける。本文は付けず、状態は変えない。'
+      security: []
+      responses:
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
+    delete:
+      tags: [health-check]
+      operationId: deleteHealthNotAllowed
+      summary: 許可されていないメソッド (DELETE)
+      description: '`GET` と `HEAD` だけを受け付ける。本文は付けず、状態は変えない。'
+      security: []
+      responses:
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
+    options:
+      tags: [health-check]
+      operationId: optionsHealthNotAllowed
+      summary: 許可されていないメソッド (OPTIONS)
+      description: '`GET` と `HEAD` だけを受け付ける。本文は付けず、状態は変えない。'
+      security: []
+      responses:
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
+    trace:
+      tags: [health-check]
+      operationId: traceHealthNotAllowed
+      summary: 許可されていないメソッド (TRACE)
+      description: '`GET` と `HEAD` だけを受け付ける。本文は付けず、状態は変えない。'
+      security: []
+      responses:
+        '405':
+          $ref: '#/components/responses/MethodNotAllowed'
 components:
   schemas:
     HealthResult:

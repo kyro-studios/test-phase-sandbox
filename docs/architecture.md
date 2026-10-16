@@ -22,7 +22,7 @@ PostgreSQL と jOOQ は、データを保存する機能が現れた時点で導
 | 項目 | 選択 | 理由 |
 | --- | --- | --- |
 | React Router | SPA として使う (library モード、`createBrowserRouter`)。サーバーサイドレンダリングはしない | バックエンドを Javalin の API に専念させ、画面は静的ファイルとして配信できるため |
-| フロントエンドの配信 | `vite build` の成果物を、nginx の入ったコンテナーで配信する。存在しないパスは `index.html` に戻す (SPA のフォールバック)。`/api/` で始まる要求は、環境変数 `BACKEND_URL` のバックエンドへ中継する | 画面と API を同じ origin にでき、CORS の設定が不要になるため |
+| フロントエンドの配信 | `vite build` の成果物を、nginx の入ったコンテナーで配信する。存在しないパスは `index.html` に戻す (SPA のフォールバック)。`/api/` で始まる要求は、環境変数 `BACKEND_URL` (バックエンドの HTTPS の URL) へ中継する。nginx は TLS の SNI を送り、`Host` を `BACKEND_URL` のホストにそろえる | 画面と API を同じ origin にでき、CORS の設定が不要になるため。Cloud Run の URL への接続には HTTPS が必要なため |
 | 開発時の API | Vite の開発サーバーの `server.proxy` で、`/api` をバックエンド (`http://localhost:8080`) へ中継する | 本番と同じく、画面から相対パスで API を呼べるため |
 | API の形式 | JSON。契約は OpenAPI 3 で 1 ファイルに書く | 契約を 1 か所に集め、テストと実装の拠り所にするため |
 | バックエンドの HTTP | Javalin (組み込みの Jetty)。ポートは環境変数 `PORT` (既定 8080) | Cloud Run が `PORT` を渡すため |
@@ -96,13 +96,15 @@ app/
 ```mermaid
 flowchart LR
     Browser["ブラウザー / 外部の監視の仕組み"] -->|"HTTPS: / と /api/*"| FE["frontend (Cloud Run)<br/>nginx: 静的ファイル配信 + /api/ の中継"]
-    FE -->|"HTTP: /api/*"| BE["backend (Cloud Run)<br/>Javalin"]
+    FE -->|"HTTPS: /api/* (BACKEND_URL)"| BE["backend (Cloud Run)<br/>Javalin"]
     BE -.->|"データを保存する機能が現れたら"| DB[("PostgreSQL")]
 ```
 
 - 利用者と外部の監視の仕組みは、フロントエンドのサービスの URL だけを使う。`/api/` で始まる要求はバックエンドへ中継される
+- フロントエンドからバックエンドへの中継も HTTPS で行う。Cloud Run の既定の URL (`https://<サービス名>-<ハッシュ>.<リージョン>.run.app`) は HTTP を受けないため、`BACKEND_URL` には、この HTTPS の URL を指定する
+- バックエンドの Cloud Run サービスは、認証なしの呼び出しを許可してデプロイする (`--allow-unauthenticated`、IAM の `allUsers` に `roles/run.invoker`)。FR-3 により、外部の監視の仕組みも呼べる必要があるため。この場合、nginx は ID トークンを付けずに中継する。将来、バックエンドを認証必須にする機能が現れたら、その機能の設計で、フロントエンドが ID トークンを付ける仕組みを決める
 - 各サービスは Docker イメージとして作り、Cloud Run にデプロイする
-- 環境ごとの設定は、環境変数で渡す (フロントエンド: `BACKEND_URL`、バックエンド: `PORT`)
+- 環境ごとの設定は、環境変数で渡す (フロントエンド: `BACKEND_URL` (HTTPS の URL)、バックエンド: `PORT`)
 
 ## 6. 機能の一覧
 
