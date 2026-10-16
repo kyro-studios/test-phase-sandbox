@@ -115,6 +115,29 @@ describe("fetchHealth", () => {
     await assertion;
   });
 
+  test("呼び出し元の signal が中断されたら、要求を中断して失敗にする", async () => {
+    const controller = new AbortController();
+    const fetchMock = stubFetch((init) => hangUntilAborted(init.signal ?? undefined));
+
+    const result = fetchHealth(controller.signal);
+    const assertion = expect(result).rejects.toThrow(HealthCheckError);
+    controller.abort();
+
+    await assertion;
+    expect(fetchMock.mock.calls[0][1]?.signal?.aborted).toBe(true);
+  });
+
+  test("すでに中断された signal が渡されたら、要求は中断された状態で送られる", async () => {
+    const controller = new AbortController();
+    controller.abort();
+    const fetchMock = stubFetch(() =>
+      Promise.reject(new DOMException("The operation was aborted.", "AbortError")),
+    );
+
+    await expect(fetchHealth(controller.signal)).rejects.toThrow(HealthCheckError);
+    expect(fetchMock.mock.calls[0][1]?.signal?.aborted).toBe(true);
+  });
+
   test("5 秒以内に応答が完了すれば、正常な結果を返す", async () => {
     vi.useFakeTimers();
     stubFetch(
