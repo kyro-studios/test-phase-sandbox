@@ -15,6 +15,8 @@
 | バックエンドのテスト・検査 | JUnit、Testcontainers、ArchUnit、Spotless |
 | デプロイ | フロントエンド、バックエンドとも Cloud Run (別々のサービス) |
 
+JSON の読み取りには、Jackson (`jackson-databind`) をバックエンドの依存に加える (greeting が最初の利用)。Javalin 6 は JSON の処理を同梱せず、Jackson を JSON の既定の処理として自動で使うため、これを選んだ。
+
 PostgreSQL と jOOQ は、データを保存する機能が現れた時点で導入する。データを持たない最初の機能 (health-check) では、依存に加えず、起動時にも接続しない。
 
 ## 2. 使い方の選択
@@ -85,9 +87,10 @@ app/
 | パッケージ | 依存してよいもの | 依存してはいけないもの |
 | --- | --- | --- |
 | `com.example.app` (`Application`) | `com.example.app.<機能>` のすべて、Javalin | |
-| `com.example.app.<機能A>` | 同じ機能のパッケージの中、Java 標準ライブラリー、Javalin (境界のクラスだけ) | `com.example.app` 直下のクラス (`Application`)、別の機能 `<機能B>` のパッケージ |
+| `com.example.app.<機能A>` | 同じ機能のパッケージの中、Java 標準ライブラリー、Javalin (境界のクラスだけ)、Jackson (`com.fasterxml.jackson..`。境界のクラスだけ) | `com.example.app` 直下のクラス (`Application`)、別の機能 `<機能B>` のパッケージ |
 
-- 機能の処理のクラス (境界のクラス以外) は、Javalin (`io.javalin..`) に依存しない
+- 機能の処理のクラス (境界のクラス以外) は、Javalin (`io.javalin..`) と Jackson (`com.fasterxml.jackson..`) に依存しない
+- `com.example.app.greeting..` も、`health` と同じく、データベースに関わるもの (`java.sql..`、`javax.sql..`、`org.jooq..`、`org.postgresql..`) に依存しない (greeting の NFR-4 を機械的に守るため)
 - `com.example.app.health..` は、データベースに関わるもの (`java.sql..`、`javax.sql..`、`org.jooq..`、`org.postgresql..`) に依存しない (health-check の NFR-1 を機械的に守るため)
 - 循環する依存を禁止する (パッケージの間、機能どうしの間)
 - 環境変数の読み取り (`System.getenv`) は、`Application` だけに許す。機能のパッケージは、値を引数で受け取る
@@ -113,3 +116,4 @@ flowchart LR
 | --- | --- | --- |
 | health-check | [architecture.md](features/1-health-check/architecture.md) | `GET /api/health` |
 | copyright-footer | [architecture.md](features/25-copyright-footer/architecture.md) | なし (フロントエンドだけの機能) |
+| greeting | [architecture.md](features/42-greeting/architecture.md) | `POST /api/greeting` |

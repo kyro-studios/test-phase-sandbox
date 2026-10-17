@@ -12,6 +12,8 @@ servers:
 tags:
   - name: health-check
     description: サーバーの稼働状況の確認 (docs/features/1-health-check)
+  - name: greeting
+    description: 名前から挨拶を作る (docs/features/42-greeting)
 paths:
   /api/health:
     get:
@@ -105,8 +107,98 @@ paths:
       responses:
         '405':
           $ref: '#/components/responses/MethodNotAllowed'
+  /api/greeting:
+    post:
+      tags: [greeting]
+      operationId: postGreeting
+      summary: 名前から挨拶の文を作る
+      description: |
+        本文の `name` の前後の空白を除いた値で、挨拶の文を作って返す。認証は不要。クエリ文字列と、`name` 以外の項目は無視する。
+        DB には接続せず、名前も挨拶も保存しない。同じ名前には、毎回同じ結果を返す。
+
+        前後から除く空白は、半角スペース (U+0020)、全角スペース (U+3000)、タブ (U+0009)、LF (U+000A)、CR (U+000D) の 5 文字だけ。
+        前後以外にある空白は、そのまま残す。文字数は Unicode のコードポイントの数で数える (絵文字 1 つは 1 文字)。
+
+        判定の順序:
+        1. 空白を除いた名前が空 (0 文字) のとき: 400 `名前を入力してください`
+        2. 21 文字以上のとき: 400 `名前は 20 文字以内で入力してください`
+        3. それ以外 (1 文字から 20 文字): 200 `こんにちは、<名前> さん` (名前の後は半角スペース 1 個)
+
+        次のときは、名前が空だったものとして扱い、1 と同じ 400 を返す: 本文が空、本文が JSON として読めない、
+        本文が JSON のオブジェクトでない、`name` が無い、`name` が文字列でない (`null`、数値、真偽値、配列、オブジェクト)。
+        `Content-Type` ヘッダーの値には依存せず、本文を JSON として読む。
+        `POST` 以外のメソッドの応答は、この契約では定めない (フレームワークの既定の応答に任せる)。
+      security: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GreetingRequest'
+            examples:
+              normal:
+                summary: 前後に半角スペースが付いた名前
+                value:
+                  name: '  山田  '
+      responses:
+        '200':
+          description: 挨拶の文を作った。本文の項目は `greeting` だけ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GreetingResult'
+              example:
+                greeting: こんにちは、山田 さん
+        '400':
+          description: 名前が受け付けられない。本文の項目は `error` だけで、挨拶は含めない
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GreetingError'
+              examples:
+                empty:
+                  summary: 名前が空
+                  value:
+                    error: 名前を入力してください
+                tooLong:
+                  summary: 名前が 21 文字以上
+                  value:
+                    error: 名前は 20 文字以内で入力してください
+        '500':
+          $ref: '#/components/responses/InternalError'
 components:
   schemas:
+    GreetingRequest:
+      type: object
+      description: 挨拶の作成の要求。`name` 以外の項目は無視する。`name` の欠落や型の誤りは、空の名前として扱う (400)
+      additionalProperties: true
+      properties:
+        name:
+          type: string
+          description: 利用者が入力した名前。前後の空白を含んでよく、文字数の上限は無い (判定は API が行う)
+          example: 山田
+    GreetingResult:
+      type: object
+      description: 挨拶の文
+      required: [greeting]
+      additionalProperties: false
+      properties:
+        greeting:
+          type: string
+          description: '`こんにちは、<名前> さん`。名前は前後の空白を除いた値で、名前の後の空白は半角スペース 1 個'
+          example: こんにちは、山田 さん
+    GreetingError:
+      type: object
+      description: 名前の誤り
+      required: [error]
+      additionalProperties: false
+      properties:
+        error:
+          type: string
+          enum:
+            - 名前を入力してください
+            - 名前は 20 文字以内で入力してください
+          description: 空のときは前者、21 文字以上のときは後者
     HealthResult:
       type: object
       description: 稼働状況の結果。項目はこの 2 つだけで、バージョン、構成、環境変数などは含めない
