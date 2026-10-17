@@ -4,6 +4,7 @@ info:
   description: |
     アプリケーションの API の契約。機能を重ねるたびに、このファイルに書き足す。
     すべての経路は `/api` から始まり、画面と同じ origin で公開される。
+    API を使わない、フロントエンドだけの機能 (例: docs/features/25-copyright-footer) は、このファイルに何も書き足さない。
   version: 1.0.0
 servers:
   - url: /
