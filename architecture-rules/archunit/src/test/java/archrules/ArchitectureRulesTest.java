@@ -86,6 +86,34 @@ class ArchitectureRulesTest {
   }
 
   @Test
+  void greetingパッケージはデータベースに関わるものに依存しない() {
+    noClasses()
+        .that()
+        .resideInAPackage(BASE + ".greeting..")
+        .should()
+        .dependOnClassesThat()
+        .resideInAnyPackage("java.sql..", "javax.sql..", "org.jooq..", "org.postgresql..")
+        .allowEmptyShould(true)
+        .check(classes);
+  }
+
+  @Test
+  void 境界のクラス以外はJacksonに依存しない() {
+    noClasses()
+        .that()
+        .resideInAPackage(BASE + "..")
+        .and()
+        .resideOutsideOfPackage(BASE)
+        .and()
+        .areNotAssignableTo("io.javalin.http.Handler")
+        .should()
+        .dependOnClassesThat()
+        .resideInAPackage("com.fasterxml.jackson..")
+        .allowEmptyShould(true)
+        .check(classes);
+  }
+
+  @Test
   void パッケージの間に循環した依存が無い() {
     slices().matching(BASE + ".(**)").should().beFreeOfCycles().allowEmptyShould(true).check(classes);
   }
