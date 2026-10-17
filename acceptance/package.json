@@ -1,13 +1,8 @@
 {
   "name": "acceptance",
   "private": true,
-  "version": "0.0.0",
-  "scripts": {
-    "test": "playwright test"
-  },
+  "description": "受け入れテストの実行の設定。テンプレートが固定で持ち、エージェントは変更しない (仕様の 10.3)",
   "devDependencies": {
-    "@playwright/test": "1.64.1",
-    "@types/node": "^22.0.0",
-    "typescript": "^5.9.0"
+    "@playwright/test": "1.64.1"
   }
 }
