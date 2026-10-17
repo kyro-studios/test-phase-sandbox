@@ -1,5 +1,7 @@
 package com.example.app;
 
+import com.example.app.greeting.GreetingHandler;
+import com.example.app.greeting.GreetingService;
 import com.example.app.health.HealthHandler;
 import com.example.app.health.HealthService;
 import io.javalin.Javalin;
@@ -15,6 +17,7 @@ public final class Application {
   private static final Logger LOG = LoggerFactory.getLogger(Application.class);
   private static final int DEFAULT_PORT = 8080;
   private static final String HEALTH_PATH = "/api/health";
+  private static final String GREETING_PATH = "/api/greeting";
 
   private Application() {}
 
@@ -24,10 +27,12 @@ public final class Application {
 
   static Javalin create(Clock clock) {
     HealthHandler health = new HealthHandler(new HealthService(clock));
+    GreetingHandler greeting = new GreetingHandler(new GreetingService());
     return Javalin.create()
         .before(HEALTH_PATH, Application::rejectUnsupportedMethod)
         .get(HEALTH_PATH, health)
         .head(HEALTH_PATH, health)
+        .post(GREETING_PATH, greeting)
         .exception(
             MethodNotAllowedResponse.class,
             (e, ctx) -> ctx.status(405).header("Allow", "GET, HEAD").result(""))
