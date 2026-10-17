@@ -1,4 +1,5 @@
 import { createBrowserRouter } from "react-router";
+import { GreetingPage } from "../features/greeting/GreetingPage";
 import { HealthPage } from "../features/health/HealthPage";
 import { NotFoundPage } from "../features/not-found/NotFoundPage";
 import { RootLayout } from "./RootLayout";
@@ -9,6 +10,7 @@ export const router = createBrowserRouter([
     children: [
       { path: "/", element: <main className="p-4">アプリケーション</main> },
       { path: "/health", element: <HealthPage /> },
+      { path: "/greeting", element: <GreetingPage /> },
       { path: "*", element: <NotFoundPage /> },
     ],
   },
