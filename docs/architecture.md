@@ -40,10 +40,9 @@ app/
 │   ├── Dockerfile / nginx.conf.template
 │   ├── src/
 │   │   ├── main.tsx             # 起動。ルーターを描画する
-│   │   ├── routes/              # 経路の定義 (router.tsx)。画面の組み立てだけを書く
-│   │   ├── features/<機能>/     # 機能ごとの画面、API の呼び出し、判定。例: features/health/
+│   │   ├── routes/              # 経路の定義 (router.tsx) と、全画面共通の枠 (RootLayout.tsx)。画面の組み立てだけを書く
+│   │   ├── features/<機能>/     # 機能ごとの画面、API の呼び出し、判定。例: features/health/、features/copyright-footer/
 │   │   └── shared/              # 機能をまたいで使う部品 (UI の部品、共通の関数)
-│   └── e2e/                     # Playwright のテスト
 └── backend/                     # Gradle プロジェクト (Java 21、Javalin)
     ├── build.gradle.kts / settings.gradle.kts
     ├── Dockerfile
@@ -54,6 +53,8 @@ app/
         └── test/java/com/example/app/
 ```
 
+- 画面や API を外から確かめる受け入れテスト (Playwright) は、`app/` の外の `acceptance/` に置く。`app/` の中に置くテストは単体テストだけとし、フロントエンドは `src/` の `*.test.ts(x)`、バックエンドは `src/test/` に置く
+- 全画面に共通する表示 (フッターなど) は、`routes/RootLayout.tsx` が、すべての経路の親として組み込む。部品そのものは `features/<機能>/` に置き、`RootLayout` は並べるだけにする。画面が増えても、子の経路として追加すれば共通の表示が付く
 - バックエンドの基底のパッケージは `com.example.app` とする
 - 機能ごとのパッケージの中は、外部との境界 (Javalin の `Handler`) と、機能の処理 (Javalin に依存しない Java のクラス) に分ける
 - 機能をまたぐモジュールの分割 (Gradle のマルチプロジェクトなど) は、機能が増えて必要になったときに別の設計で決める
@@ -76,7 +77,7 @@ app/
 
 - `main.tsx`、`routes`、`features`、`shared` 以外のモジュールの追加は、全体の構成を変える変更として扱う
 - 循環する依存を禁止する
-- `e2e/` と `*.test.ts(x)` は、`src` の任意のモジュールに依存してよい。`src` の本体のコードから、`e2e/` とテストファイルへは依存しない
+- `*.test.ts(x)` は、`src` の任意のモジュールに依存してよい。`src` の本体のコードから、テストファイルへは依存しない
 - 外部のパッケージは、`package.json` に宣言されたものだけを使う (未宣言の依存を禁止する)
 
 ### 4.2 バックエンド (Java)
@@ -111,3 +112,4 @@ flowchart LR
 | 機能 | 設計 | API |
 | --- | --- | --- |
 | health-check | [architecture.md](features/1-health-check/architecture.md) | `GET /api/health` |
+| copyright-footer | [architecture.md](features/25-copyright-footer/architecture.md) | なし (フロントエンドだけの機能) |
