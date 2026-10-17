@@ -18,7 +18,7 @@ trap cleanup EXIT
 PORT=8080 app/backend/build/install/backend/bin/backend &
 pids+=($!)
 
-(cd app/frontend && exec npx vite preview --host 127.0.0.1 --port "$port" --strictPort) &
+(cd app/frontend && exec node node_modules/vite/bin/vite.js preview --host 127.0.0.1 --port "$port" --strictPort) &
 pids+=($!)
 
 # どちらかが終わったら、残りも止めて終わる
