@@ -4,6 +4,8 @@ import com.example.app.greeting.GreetingHandler;
 import com.example.app.greeting.GreetingService;
 import com.example.app.health.HealthHandler;
 import com.example.app.health.HealthService;
+import com.example.app.textlength.TextLengthHandler;
+import com.example.app.textlength.TextLengthService;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.http.HandlerType;
@@ -18,6 +20,7 @@ public final class Application {
   private static final int DEFAULT_PORT = 8080;
   private static final String HEALTH_PATH = "/api/health";
   private static final String GREETING_PATH = "/api/greeting";
+  private static final String TEXT_LENGTH_PATH = "/api/text-length";
 
   private Application() {}
 
@@ -28,11 +31,13 @@ public final class Application {
   static Javalin create(Clock clock) {
     HealthHandler health = new HealthHandler(new HealthService(clock));
     GreetingHandler greeting = new GreetingHandler(new GreetingService());
+    TextLengthHandler textLength = new TextLengthHandler(new TextLengthService());
     return Javalin.create()
         .before(HEALTH_PATH, Application::rejectUnsupportedMethod)
         .get(HEALTH_PATH, health)
         .head(HEALTH_PATH, health)
         .post(GREETING_PATH, greeting)
+        .post(TEXT_LENGTH_PATH, textLength)
         .exception(
             MethodNotAllowedResponse.class,
             (e, ctx) -> ctx.status(405).header("Allow", "GET, HEAD").result(""))
