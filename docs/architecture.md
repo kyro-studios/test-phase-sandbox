@@ -92,6 +92,8 @@ app/
 - 機能の処理のクラス (境界のクラス以外) は、Javalin (`io.javalin..`) と Jackson (`com.fasterxml.jackson..`) に依存しない
 - `com.example.app.greeting..` も、`health` と同じく、データベースに関わるもの (`java.sql..`、`javax.sql..`、`org.jooq..`、`org.postgresql..`) に依存しない (greeting の NFR-4 を機械的に守るため)
 - `com.example.app.health..` は、データベースに関わるもの (`java.sql..`、`javax.sql..`、`org.jooq..`、`org.postgresql..`) に依存しない (health-check の NFR-1 を機械的に守るため)
+- `com.example.app.textlength..` も、同じく、データベースに関わるもの (`java.sql..`、`javax.sql..`、`org.jooq..`、`org.postgresql..`) に依存しない (text-length の NFR-4 を機械的に守るため)
+- 機能の名前にハイフンを含む場合、Java のパッケージ名はハイフンを除いてつなぐ (例: 機能 `text-length` は `textlength`)。フロントエンドのディレクトリは機能の名前のまま (`features/text-length/`) とする
 - 循環する依存を禁止する (パッケージの間、機能どうしの間)
 - 環境変数の読み取り (`System.getenv`) は、`Application` だけに許す。機能のパッケージは、値を引数で受け取る
 
@@ -117,3 +119,4 @@ flowchart LR
 | health-check | [architecture.md](features/1-health-check/architecture.md) | `GET /api/health` |
 | copyright-footer | [architecture.md](features/25-copyright-footer/architecture.md) | なし (フロントエンドだけの機能) |
 | greeting | [architecture.md](features/42-greeting/architecture.md) | `POST /api/greeting` |
+| text-length | [architecture.md](features/60-text-length/architecture.md) | `POST /api/text-length` |
