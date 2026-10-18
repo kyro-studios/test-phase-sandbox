@@ -66,11 +66,19 @@ test("/greeting の経路が挨拶の画面に結びついている", () => {
   expect(fetchMock).not.toHaveBeenCalled();
 });
 
+test("/text-length の経路が文字数の画面に結びついている", () => {
+  renderAt("/text-length");
+
+  expect(screen.getByRole("heading", { name: "文字数" })).toBeTruthy();
+  expect(fetchMock).not.toHaveBeenCalled();
+});
+
 describe("全画面共通の枠 (RootLayout)", () => {
   test.each([
     ["/", "アプリケーション"],
     ["/health", "稼働状況"],
     ["/greeting", "挨拶"],
+    ["/text-length", "文字数"],
     ["/存在しないパス", "ページが見つかりません"],
   ])("%s で、フッターの領域が 1 つあり、年の表記を含む", async (path, heading) => {
     renderAt(path);
@@ -82,7 +90,7 @@ describe("全画面共通の枠 (RootLayout)", () => {
     expect(within(footers[0]).getByText("© 2026 Kyro Studios")).toBeTruthy();
   });
 
-  test.each([["/"], ["/health"], ["/greeting"], ["/存在しないパス"]])(
+  test.each([["/"], ["/health"], ["/greeting"], ["/text-length"], ["/存在しないパス"]])(
     "%s で、フッターは <main> の外にある",
     (path) => {
       renderAt(path);
