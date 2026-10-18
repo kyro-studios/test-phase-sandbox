@@ -98,6 +98,18 @@ class ArchitectureRulesTest {
   }
 
   @Test
+  void textlengthパッケージはデータベースに関わるものに依存しない() {
+    noClasses()
+        .that()
+        .resideInAPackage(BASE + ".textlength..")
+        .should()
+        .dependOnClassesThat()
+        .resideInAnyPackage("java.sql..", "javax.sql..", "org.jooq..", "org.postgresql..")
+        .allowEmptyShould(true)
+        .check(classes);
+  }
+
+  @Test
   void 境界のクラス以外はJacksonに依存しない() {
     noClasses()
         .that()
