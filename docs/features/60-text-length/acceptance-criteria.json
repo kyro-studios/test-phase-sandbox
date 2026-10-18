@@ -1,0 +1,132 @@
+{
+  "feature": 60,
+  "next_number": 19,
+  "criteria": [
+    {
+      "id": "AC60-1",
+      "kind": "api",
+      "behavior": "前提: アプリケーションが起動している。操作: `POST /api/text-length` に、本文 `{\"text\": \"あいう\"}` を送る",
+      "expected": "状態コード 200、`Content-Type` が `application/json`、本文が `{\"length\": 3}`",
+      "spec_reference": "4.1 文字数を数える"
+    },
+    {
+      "id": "AC60-2",
+      "kind": "api",
+      "behavior": "前提: アプリケーションが起動している。操作: `POST /api/text-length` に、本文 `{\"text\": \"😀\"}` を送る",
+      "expected": "状態コード 200、本文が `{\"length\": 1}`。絵文字 1 個は 1 文字として数える",
+      "spec_reference": "3.1 用語と値の決まり"
+    },
+    {
+      "id": "AC60-3",
+      "kind": "api",
+      "behavior": "前提: アプリケーションが起動している。操作: `POST /api/text-length` に、本文 `{\"text\": \" あ \"}` を送る (`text` は、前後に半角スペースを 1 個ずつ付けた `あ`)",
+      "expected": "状態コード 200、本文が `{\"length\": 3}`。前後の空白を除かずに数える",
+      "spec_reference": "3.1 用語と値の決まり"
+    },
+    {
+      "id": "AC60-4",
+      "kind": "api",
+      "behavior": "前提: アプリケーションが起動している。操作: `POST /api/text-length` に、本文の `text` を、半角スペースを 3 個だけの文字列にして送る",
+      "expected": "状態コード 200、本文が `{\"length\": 3}`。空白だけの文は空とみなさず、空白の数を文字数とする",
+      "spec_reference": "3.1 用語と値の決まり"
+    },
+    {
+      "id": "AC60-5",
+      "kind": "api",
+      "behavior": "前提: アプリケーションが起動している。操作: `POST /api/text-length` に、本文 `{\"text\": \"\"}` を送る",
+      "expected": "状態コード 400、`Content-Type` が `application/json`、本文が `{\"error\": \"文を入力してください\"}`",
+      "spec_reference": "4.2 異常系 (API)"
+    },
+    {
+      "id": "AC60-6",
+      "kind": "api",
+      "behavior": "前提: アプリケーションが起動している。操作: `POST /api/text-length` に、本文の `text` を、`a` を 201 個並べた文字列にして送る",
+      "expected": "状態コード 400、`Content-Type` が `application/json`、本文が `{\"error\": \"文は 200 文字以内で入力してください\"}`",
+      "spec_reference": "4.2 異常系 (API)"
+    },
+    {
+      "id": "AC60-7",
+      "kind": "api",
+      "behavior": "前提: アプリケーションが起動している。操作: `POST /api/text-length` に、本文の `text` を、`a` を 200 個並べた文字列にして送る",
+      "expected": "状態コード 200、本文が `{\"length\": 200}`。ちょうど 200 文字は受け付ける",
+      "spec_reference": "6. 境界値"
+    },
+    {
+      "id": "AC60-8",
+      "kind": "api",
+      "behavior": "前提: アプリケーションが起動している。操作: `POST /api/text-length` に、本文の `text` を、絵文字 `😀` を 200 個並べた文字列にして送る (コードポイントで 200 文字、UTF-16 では 400 単位)",
+      "expected": "状態コード 200、本文が `{\"length\": 200}`。UTF-16 の単位では数えず、200 文字として受け付ける",
+      "spec_reference": "6. 境界値"
+    },
+    {
+      "id": "AC60-9",
+      "kind": "screen",
+      "behavior": "前提: 利用者がブラウザーで、何も入力していない状態でいる。操作: `/text-length` を開く",
+      "expected": "表示名が「文」の入力欄 (空) と、「数える」というボタンが表示される。文字数も誤りの文言も表示されない",
+      "spec_reference": "5.1 画面を開く"
+    },
+    {
+      "id": "AC60-10",
+      "kind": "screen",
+      "behavior": "前提: `/text-length` が開いている。操作: 表示名「文」の入力欄を探し、「あいう」と入力する",
+      "expected": "表示名「文」の入力欄が見つかり、入力欄の値が「あいう」になる",
+      "spec_reference": "5.1 画面を開く"
+    },
+    {
+      "id": "AC60-11",
+      "kind": "screen",
+      "behavior": "前提: `/text-length` が開いていて、入力欄に「あいう」と入力されている。操作: 「数える」ボタンを押す",
+      "expected": "「3 文字」が画面に表示される。誤りの文言は表示されない",
+      "spec_reference": "5.2 「数える」ボタンを押す"
+    },
+    {
+      "id": "AC60-12",
+      "kind": "screen",
+      "behavior": "前提: `/text-length` が開いていて、入力欄は空である。操作: 「数える」ボタンを押す",
+      "expected": "「文を入力してください」が画面に表示される。文字数は表示されない",
+      "spec_reference": "5.2 「数える」ボタンを押す"
+    },
+    {
+      "id": "AC60-13",
+      "kind": "screen",
+      "behavior": "前提: `/text-length` が開いている。操作: 入力欄に `a` を 201 個入力し、「数える」ボタンを押す",
+      "expected": "入力欄に 201 文字の値が残ったまま、「文は 200 文字以内で入力してください」が画面に表示される。文字数は表示されない",
+      "spec_reference": "5.2 「数える」ボタンを押す"
+    },
+    {
+      "id": "AC60-14",
+      "kind": "screen",
+      "behavior": "前提: 「3 文字」が表示されている。操作: 入力欄の値を「あいうえお」に書き換えて、「数える」ボタンを押す",
+      "expected": "「5 文字」が画面に表示され、「3 文字」は表示されない",
+      "spec_reference": "5.2 「数える」ボタンを押す"
+    },
+    {
+      "id": "AC60-18",
+      "kind": "screen",
+      "behavior": "前提: 「文を入力してください」が表示されている。操作: 入力欄の値を「あいう」に書き換えて、「数える」ボタンを押す",
+      "expected": "「3 文字」が画面に表示され、「文を入力してください」は表示されない",
+      "spec_reference": "5.2 「数える」ボタンを押す"
+    },
+    {
+      "id": "AC60-15",
+      "kind": "screen",
+      "behavior": "前提: API に接続できない状態 (サーバーが停止しているなど) で、`/text-length` が開いていて、入力欄に「あいう」と入力されている。操作: 「数える」ボタンを押す",
+      "expected": "「文字数を取得できませんでした」が画面に表示される。文字数と誤りの文言は表示されない",
+      "spec_reference": "5.4 異常系 (画面)"
+    },
+    {
+      "id": "AC60-16",
+      "kind": "screen",
+      "behavior": "前提: 「3 文字」が表示されている。操作: 同じブラウザーで `/text-length` を新しく開く",
+      "expected": "文字数も誤りの文言も表示されず、入力欄は空である",
+      "spec_reference": "5.3 画面を開き直す"
+    },
+    {
+      "id": "AC60-17",
+      "kind": "screen",
+      "behavior": "前提: ブラウザーで `/text-length` を開いている。操作: 画面の下部を見る",
+      "expected": "`© <年> Kyro Studios` の形の著作権の表記が、画面の下部のフッターに表示される。年は端末の日付の年 (西暦 4 桁)",
+      "spec_reference": "5.1 画面を開く"
+    }
+  ]
+}
