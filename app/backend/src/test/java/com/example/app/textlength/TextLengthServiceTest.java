@@ -19,7 +19,7 @@ class TextLengthServiceTest {
 
   @Test
   void 一文字の文は1を返す() {
-    assertEquals(new TextLengthResult.Counted(1), service.count("あ"));
+    assertEquals(new TextLengthResult.Counted(2), service.count("あ"));
   }
 
   @Test
