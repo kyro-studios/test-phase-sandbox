@@ -14,6 +14,8 @@ tags:
     description: サーバーの稼働状況の確認 (docs/features/1-health-check)
   - name: greeting
     description: 名前から挨拶を作る (docs/features/42-greeting)
+  - name: text-length
+    description: 文の文字数を数える (docs/features/60-text-length)
 paths:
   /api/health:
     get:
@@ -166,8 +168,102 @@ paths:
                     error: 名前は 20 文字以内で入力してください
         '500':
           $ref: '#/components/responses/InternalError'
+  /api/text-length:
+    post:
+      tags: [text-length]
+      operationId: postTextLength
+      summary: 文の文字数を数える
+      description: |
+        本文の `text` を、前後の空白も除かず、入力されたままの文として扱い、Unicode のコードポイントの数を返す。
+        認証は不要。クエリ文字列と、`text` 以外の項目は無視する。
+        DB には接続せず、文も文字数も保存しない。同じ文には、毎回同じ結果を返す。
+
+        文字数は、コードポイントを 1 つずつ数える。絵文字 1 つ (`😀`) は 1 文字で、UTF-16 の単位では数えない。
+        半角スペース、全角スペース、タブ、改行も、ほかの文字と同じく 1 文字として数える。
+        空白だけの文も空とはみなさない (半角スペース 3 個は 3 文字)。
+
+        判定の順序:
+        1. 文が空 (0 文字) のとき: 400 `文を入力してください`
+        2. 201 文字以上のとき: 400 `文は 200 文字以内で入力してください`
+        3. それ以外 (1 文字から 200 文字): 200 `{"length": <文字数>}`
+
+        次のときは、文が空だったものとして扱い、1 と同じ 400 を返す: 本文が空、本文が JSON として読めない、
+        本文が JSON のオブジェクトでない、`text` が無い、`text` が文字列でない (`null`、数値、真偽値、配列、オブジェクト)。
+        `Content-Type` ヘッダーの値には依存せず、本文を JSON として読む。
+        `POST` 以外のメソッドの応答と、本文の大きさの上限は、この契約では定めない (フレームワークの既定に任せる)。
+      security: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TextLengthRequest'
+            examples:
+              normal:
+                summary: 前後に半角スペースが付いた文 (3 文字)
+                value:
+                  text: ' あ '
+      responses:
+        '200':
+          description: 文字数を数えた。本文の項目は `length` だけ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TextLengthResult'
+              example:
+                length: 3
+        '400':
+          description: 文が受け付けられない。本文の項目は `error` だけで、文字数は含めない
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TextLengthError'
+              examples:
+                empty:
+                  summary: 文が空
+                  value:
+                    error: 文を入力してください
+                tooLong:
+                  summary: 文が 201 文字以上
+                  value:
+                    error: 文は 200 文字以内で入力してください
+        '500':
+          $ref: '#/components/responses/InternalError'
 components:
   schemas:
+    TextLengthRequest:
+      type: object
+      description: 文字数を数える要求。`text` 以外の項目は無視する。`text` の欠落や型の誤りは、空の文として扱う (400)
+      additionalProperties: true
+      properties:
+        text:
+          type: string
+          description: 利用者が入力した文。前後の空白を含んでよく、除かずに数える。文字数の上限は無い (判定は API が行う)
+          example: あいう
+    TextLengthResult:
+      type: object
+      description: 文字数
+      required: [length]
+      additionalProperties: false
+      properties:
+        length:
+          type: integer
+          minimum: 1
+          maximum: 200
+          description: 文のコードポイントの数
+          example: 3
+    TextLengthError:
+      type: object
+      description: 文の誤り
+      required: [error]
+      additionalProperties: false
+      properties:
+        error:
+          type: string
+          enum:
+            - 文を入力してください
+            - 文は 200 文字以内で入力してください
+          description: 空のときは前者、201 文字以上のときは後者
     GreetingRequest:
       type: object
       description: 挨拶の作成の要求。`name` 以外の項目は無視する。`name` の欠落や型の誤りは、空の名前として扱う (400)
